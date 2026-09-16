@@ -1,0 +1,16 @@
+{
+  "name": "hw-write-to-raw",
+  "description": "Hello World example for write to raw",
+  "externalId": "write-to-raw",
+  "versionTag": "0.0.1",
+  "infra": "appsApi",
+  "deployments": [
+    {
+      "org": "cog-demo",
+      "project": "bgfast",
+      "baseUrl": "https://api.cognitedata.com",
+      "deployClientId": "",
+      "deploySecretName": "COG_DEMO_BGFAST_API"
+    }
+  ]
+}
