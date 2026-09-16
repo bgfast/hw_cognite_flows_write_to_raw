@@ -6,11 +6,11 @@
   "infra": "appsApi",
   "deployments": [
     {
-      "org": "cog-demo",
+     "org": "cog-bgfast",
       "project": "bgfast",
-      "baseUrl": "https://api.cognitedata.com",
+      "baseUrl": "https://bluefield.cognitedata.com",
       "deployClientId": "",
-      "deploySecretName": "COG_DEMO_BGFAST_API"
+      "deploySecretName": "COG_DEMO_BGFAST_AZ_EASTUS_1"
     }
   ]
 }
