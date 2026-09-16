@@ -26,6 +26,8 @@ Source: `App-Brief.md`.
 
 - Given the verification panel was open before a reload, when the app loads again, then the panel is still open and re-reads the rows.
 
+- Given a successful write, when the user selects Open in RAW explorer, then Fusion opens `/raw` in a new tab with `hello_world` as the active table, in whichever organisation, project, and cluster the app is currently running.
+
 - Given the table has not been created yet, when the user verifies before writing anything, then the app shows an empty-table message and not an error, because CDF's 404 for an absent database means "nothing here yet".
 
 - Given a verification read fails, when the failure is shown, then the reading indicator stops rather than spinning indefinitely.
@@ -49,6 +51,10 @@ Source: `App-Brief.md`.
 - FR-005: On Write, the app MUST call `client.raw.insertRows(database, table, rows, true)`. The fourth argument is the positional `ensureParent` boolean — not an options object.
 
 - FR-006: After a successful write, the app MUST report the row count, database, and table.
+
+- FR-006a: The screen MUST show where the rows land — CDF project, database, and table — reading the project from the SDK client at runtime.
+
+- FR-006b: The screen MUST offer a link that opens the written table in Fusion's RAW explorer, in a new tab. It MUST be built with `navigateInternal({ path: '/raw', queryParams })` so the host supplies the organisation, project, cluster, and workspace. Organisation, project, and cluster MUST NOT appear in app code. The link is hidden when no host is present.
 
 - FR-007: After a failed write, the app MUST show a user-visible error, distinguishing a missing-capability failure (CDF 403) from other failures.
 

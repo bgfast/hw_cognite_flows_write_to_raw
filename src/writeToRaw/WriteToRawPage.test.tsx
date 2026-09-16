@@ -17,6 +17,35 @@ describe('WriteToRawPage', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
+  it('shows the CDF project the rows land in', () => {
+    render(<WriteToRawPage service={makeService()} host={null} projectName="bgfast" />);
+
+    expect(screen.getByText('Project')).toBeInTheDocument();
+    expect(screen.getByText('bgfast')).toBeInTheDocument();
+  });
+
+  it('opens the RAW explorer on the written table in a new tab', async () => {
+    const host = makeHost();
+    render(<WriteToRawPage service={makeService()} host={host} />);
+
+    await userEvent.click(screen.getByRole('button', { name: /open in raw explorer/i }));
+
+    expect(host.navigateInternal).toHaveBeenCalledWith({
+      path: '/raw',
+      queryParams: {
+        tabs: `[["${RAW_DATABASE_NAME}","${RAW_TABLE_NAME}",null]]`,
+        activeTable: `["${RAW_DATABASE_NAME}","${RAW_TABLE_NAME}",null]`,
+      },
+      openInNewTab: true,
+    });
+  });
+
+  it('hides the RAW explorer link when there is no Fusion host', () => {
+    render(<WriteToRawPage service={makeService()} host={null} />);
+
+    expect(screen.queryByRole('button', { name: /open in raw explorer/i })).not.toBeInTheDocument();
+  });
+
   it('reports how many rows were written', async () => {
     render(<WriteToRawPage service={makeService()} host={null} />);
 
@@ -63,6 +92,17 @@ describe('WriteToRawPage', () => {
     expect(host.syncInternalState).toHaveBeenCalledWith('{"resultsOpen":true}');
   });
 
+  it('shows a reading indicator while the verification read is in flight', async () => {
+    const service = makeService({
+      readSampleRows: vi.fn(() => new Promise<never>(() => undefined)),
+    });
+    render(<WriteToRawPage service={service} host={null} />);
+
+    await userEvent.click(screen.getByRole('button', { name: /verify in cdf raw/i }));
+
+    await waitFor(() => expect(screen.getByText(/reading rows back/i)).toBeInTheDocument());
+  });
+
   it('stops the reading indicator when the read fails', async () => {
     const service = makeService({
       readSampleRows: vi.fn(() => Promise.reject(new Error('Gateway timeout'))),
@@ -96,5 +136,8 @@ function makeService(overrides: Partial<RawSampleService> = {}): RawSampleServic
 }
 
 function makeHost(): WriteToRawHost {
-  return { syncInternalState: vi.fn(() => Promise.resolve(true)) };
+  return {
+    syncInternalState: vi.fn(() => Promise.resolve(true)),
+    navigateInternal: vi.fn(() => Promise.resolve(true)),
+  };
 }

@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useRef } from 'react
 
 import { parseInternalState, serializeInternalState } from './internalState';
 import { toReadErrorMessage, toWriteErrorMessage } from './rawErrors';
+import { RAW_EXPLORER_PATH, buildRawExplorerQuery } from './rawExplorerLink';
 import { VERIFY_ROW_LIMIT } from './rawSampleService';
 import type { RawRowRead, RawSampleService } from './rawSampleService';
 import { RAW_DATABASE_NAME, RAW_TABLE_NAME, SAMPLE_COLUMNS, SAMPLE_ROWS } from './sampleData';
@@ -12,6 +13,11 @@ import type { WriteStatus } from './useWriteToRawStorage';
 /** The slice of `HostAppAPI` this view model needs. */
 export type WriteToRawHost = {
   syncInternalState: (state: string) => Promise<boolean>;
+  navigateInternal: (options: {
+    path: string;
+    queryParams?: Record<string, string>;
+    openInNewTab?: boolean;
+  }) => Promise<boolean>;
 };
 
 const defaultDeps = { useWriteToRawStorage };
@@ -39,8 +45,10 @@ export type WriteToRawViewModel = {
   rowsFromRaw: RawRowRead[] | null;
   isReadingRows: boolean;
   isResultsOpen: boolean;
+  canOpenRawExplorer: boolean;
   write: () => Promise<void>;
   toggleResults: () => Promise<void>;
+  openRawExplorer: () => Promise<void>;
 };
 
 export function useWriteToRawViewModel({
@@ -82,6 +90,16 @@ export function useWriteToRawViewModel({
     if (resultsOpen) await readRows();
   }, [isResultsOpen, update, host, readRows]);
 
+  // The host resolves organisation, project, cluster, and workspace, so this
+  // link follows whichever CDF the app is running in.
+  const openRawExplorer = useCallback(async () => {
+    await host?.navigateInternal({
+      path: RAW_EXPLORER_PATH,
+      queryParams: buildRawExplorerQuery(RAW_DATABASE_NAME, RAW_TABLE_NAME),
+      openInNewTab: true,
+    });
+  }, [host]);
+
   // A restored open panel should show live rows, not an empty shell. Guarded so
   // it runs once on mount and never competes with `toggleResults`.
   const hasRestored = useRef(false);
@@ -103,7 +121,9 @@ export function useWriteToRawViewModel({
     rowsFromRaw: state.rowsFromRaw,
     isReadingRows: state.isReadingRows,
     isResultsOpen,
+    canOpenRawExplorer: host !== null,
     write,
     toggleResults,
+    openRawExplorer,
   };
 }

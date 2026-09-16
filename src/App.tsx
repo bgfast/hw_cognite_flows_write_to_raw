@@ -13,7 +13,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { createRawSampleService } from './writeToRaw/rawSampleService';
 import { WriteToRawPage } from './writeToRaw/WriteToRawPage';
 
-type AppApi = Pick<HostAppAPI, 'syncInternalState'>;
+type AppApi = Pick<HostAppAPI, 'syncInternalState' | 'navigateInternal'>;
 type AppConnectResult = { api: AppApi; initialState?: string };
 
 const loadingFallback = (
@@ -51,7 +51,14 @@ function AppContent({ api, initialState }: AppContentProps) {
   const client = useCogniteSdk();
   const service = useMemo(() => createRawSampleService(client), [client]);
 
-  return <WriteToRawPage service={service} host={api} initialState={initialState} />;
+  return (
+    <WriteToRawPage
+      service={service}
+      host={api}
+      projectName={client.project}
+      initialState={initialState}
+    />
+  );
 }
 
 type AppProps = {

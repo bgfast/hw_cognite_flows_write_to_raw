@@ -126,6 +126,33 @@ describe(useWriteToRawViewModel.name, () => {
     expect(result.current.errorMessage).toContain('rawAcl:READ');
   });
 
+  it('asks the host to open the RAW explorer, letting it resolve the CDF context', async () => {
+    const host = makeHost();
+    const { result } = renderHook(() => useWriteToRawViewModel(makeProps({ host })), { wrapper });
+
+    await act(async () => {
+      await result.current.openRawExplorer();
+    });
+
+    // No organisation, project, or cluster here: the host supplies all three.
+    expect(host.navigateInternal).toHaveBeenCalledWith({
+      path: '/raw',
+      queryParams: {
+        tabs: '[["raw_sample_all_flows","hello_world",null]]',
+        activeTable: '["raw_sample_all_flows","hello_world",null]',
+      },
+      openInNewTab: true,
+    });
+  });
+
+  it('cannot open the RAW explorer without a host', () => {
+    const { result } = renderHook(() => useWriteToRawViewModel(makeProps({ host: null })), {
+      wrapper,
+    });
+
+    expect(result.current.canOpenRawExplorer).toBe(false);
+  });
+
   it('refreshes the rows after a write while the panel is open', async () => {
     const service = makeService();
     const { result } = renderHook(
@@ -151,7 +178,10 @@ function makeService(overrides: Partial<RawSampleService> = {}): RawSampleServic
 }
 
 function makeHost(): WriteToRawHost {
-  return { syncInternalState: vi.fn(() => Promise.resolve(true)) };
+  return {
+    syncInternalState: vi.fn(() => Promise.resolve(true)),
+    navigateInternal: vi.fn(() => Promise.resolve(true)),
+  };
 }
 
 function makeProps(

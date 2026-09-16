@@ -9,7 +9,7 @@ import { RAW_DATABASE_NAME, RAW_TABLE_NAME } from './writeToRaw/sampleData';
 
 type AppDeps = NonNullable<ComponentProps<typeof App>['deps']>;
 
-type AppApi = Pick<HostAppAPI, 'syncInternalState'>;
+type AppApi = Pick<HostAppAPI, 'syncInternalState' | 'navigateInternal'>;
 
 describe('App', () => {
   beforeEach(() => {
@@ -55,6 +55,7 @@ describe('App', () => {
 function makeApi(): AppApi {
   return {
     syncInternalState: vi.fn<HostAppAPI['syncInternalState']>(() => Promise.resolve(true)),
+    navigateInternal: vi.fn<HostAppAPI['navigateInternal']>(() => Promise.resolve(true)),
   };
 }
 

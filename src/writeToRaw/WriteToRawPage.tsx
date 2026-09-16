@@ -15,6 +15,7 @@ import {
 } from '@cognite/aura/components/empty-state';
 import { Loader } from '@cognite/aura/components/loader';
 import { Separator } from '@cognite/aura/components/separator';
+import { IconExternalLink } from '@tabler/icons-react';
 
 import type { RawSampleService } from './rawSampleService';
 import { SampleRowsTable } from './SampleRowsTable';
@@ -24,10 +25,17 @@ import type { WriteToRawHost } from './useWriteToRawViewModel';
 type WriteToRawPageProps = {
   service: RawSampleService;
   host: WriteToRawHost | null;
+  /** Read from the SDK client at runtime, so it follows the current CDF project. */
+  projectName?: string;
   initialState?: string;
 };
 
-export function WriteToRawPage({ service, host, initialState }: WriteToRawPageProps) {
+export function WriteToRawPage({
+  service,
+  host,
+  projectName,
+  initialState,
+}: WriteToRawPageProps) {
   const vm = useWriteToRawViewModel({ service, host, initialState });
 
   return (
@@ -43,15 +51,18 @@ export function WriteToRawPage({ service, host, initialState }: WriteToRawPagePr
           </CardHeader>
 
           <CardContent className="flex flex-col gap-6">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-muted-foreground">Database</span>
-              <Badge variant="nordic" background>
-                {vm.databaseName}
-              </Badge>
-              <span className="text-muted-foreground">Table</span>
-              <Badge variant="nordic" background>
-                {vm.tableName}
-              </Badge>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <dl className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                {projectName ? <RawLocation label="Project" value={projectName} /> : null}
+                <RawLocation label="Database" value={vm.databaseName} />
+                <RawLocation label="Table" value={vm.tableName} />
+              </dl>
+              {vm.canOpenRawExplorer ? (
+                <Button variant="ghost" onClick={() => void vm.openRawExplorer()}>
+                  <IconExternalLink aria-hidden className="size-4" />
+                  Open in RAW explorer
+                </Button>
+              ) : null}
             </div>
 
             <SampleRowsTable
@@ -99,6 +110,19 @@ export function WriteToRawPage({ service, host, initialState }: WriteToRawPagePr
         </Card>
       </section>
     </main>
+  );
+}
+
+function RawLocation({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd>
+        <Badge variant="nordic" background>
+          {value}
+        </Badge>
+      </dd>
+    </div>
   );
 }
 
