@@ -15,8 +15,20 @@ describe(toWriteErrorMessage.name, () => {
     expect(message).toContain('Service unavailable');
   });
 
+  it('reads the message off a plain CDF error object', () => {
+    const message = toWriteErrorMessage({ status: 500, message: 'Internal server error' });
+
+    expect(message).toContain('Internal server error');
+  });
+
   it('stays readable when the failure carries no message', () => {
     expect(toWriteErrorMessage(undefined)).toBe(
+      'Could not write the sample rows to CDF RAW. Please try again.'
+    );
+    expect(toWriteErrorMessage({ status: 500 })).toBe(
+      'Could not write the sample rows to CDF RAW. Please try again.'
+    );
+    expect(toWriteErrorMessage({ message: 42 })).toBe(
       'Could not write the sample rows to CDF RAW. Please try again.'
     );
   });
