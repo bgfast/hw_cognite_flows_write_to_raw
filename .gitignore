@@ -18,6 +18,13 @@ certificates
 # Editor directories
 .vscode
 .idea
+.cursor
+
+# Local AI / Flows builder skills (pulled by `npx @cognite/cli apps skills pull`)
+.agents
+.claude
+.mcp.json
+skills-lock.json
 
 # OS files
 .DS_Store
