@@ -36,7 +36,11 @@ export type RawRowsClient = {
   };
 };
 
-export class CdfRawSampleService implements RawSampleService {
+export function createRawSampleService(client: RawRowsClient): RawSampleService {
+  return new CdfRawSampleService(client);
+}
+
+class CdfRawSampleService implements RawSampleService {
   constructor(
     private readonly client: RawRowsClient,
     private readonly rows: SampleRow[] = SAMPLE_ROWS

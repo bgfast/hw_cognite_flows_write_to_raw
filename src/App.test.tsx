@@ -1,15 +1,56 @@
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { HostAppAPI, ConnectToHostAppResult } from '@cognite/app-sdk';
+import type { ConnectToHostAppResult, HostAppAPI } from '@cognite/app-sdk';
 import { CogniteClient } from '@cognite/sdk';
+import { render, screen, waitFor } from '@testing-library/react';
 import type { ComponentProps } from 'react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import App from './App';
+import { RAW_DATABASE_NAME, RAW_TABLE_NAME } from './writeToRaw/sampleData';
 
 type AppDeps = NonNullable<ComponentProps<typeof App>['deps']>;
 
 type AppApi = Pick<HostAppAPI, 'syncInternalState'>;
+
+describe('App', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('renders loading state while the host connection is pending', () => {
+    render(
+      <App deps={makeLoadingDeps()} connectToHostApp={() => new Promise<never>(() => undefined)} />
+    );
+
+    expect(screen.getByText('Loading project...')).toBeInTheDocument();
+  });
+
+  it('renders the write screen with the fixed RAW target', async () => {
+    render(<App deps={makeDeps()} connectToHostApp={makeConnectedFn()} />);
+
+    await waitFor(() =>
+      expect(screen.getByText('Write sample rows to CDF RAW')).toBeInTheDocument()
+    );
+    expect(screen.getByText(RAW_DATABASE_NAME)).toBeInTheDocument();
+    expect(screen.getByText(RAW_TABLE_NAME)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /write 5 rows/i })).toBeInTheDocument();
+  });
+
+  it('restores the verification panel from host state', async () => {
+    const api = makeApi();
+    render(
+      <App
+        deps={makeDeps()}
+        connectToHostApp={() =>
+          Promise.resolve({ api, initialState: JSON.stringify({ resultsOpen: true }) })
+        }
+      />
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /hide verification/i })).toBeInTheDocument()
+    );
+  });
+});
 
 function makeApi(): AppApi {
   return {
@@ -39,62 +80,9 @@ function makeDeps(): AppDeps {
 
 function makeLoadingDeps(): AppDeps {
   return {
-    connectToHostApp: vi.fn<AppDeps['connectToHostApp']>(() => new Promise<ConnectToHostAppResult>(() => undefined)),
+    connectToHostApp: vi.fn<AppDeps['connectToHostApp']>(
+      () => new Promise<ConnectToHostAppResult>(() => undefined)
+    ),
     createClient: vi.fn<AppDeps['createClient']>((config) => new CogniteClient(config)),
   };
 }
-
-describe('App', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('renders loading state', () => {
-    render(<App deps={makeLoadingDeps()} connectToHostApp={() => new Promise<never>(() => undefined)} />);
-    expect(screen.getByText('Loading project...')).toBeInTheDocument();
-  });
-
-  it('renders splash with deployment targets and checklist copy', async () => {
-    render(<App deps={makeDeps()} connectToHostApp={makeConnectedFn()} />);
-    await waitFor(() => expect(screen.getByText('Welcome to Flows custom apps')).toBeInTheDocument());
-    expect(screen.getByText('App deployment checklist')).toBeInTheDocument();
-    expect(screen.getByText('Plan')).toBeInTheDocument();
-    expect(screen.getByText('Explore')).toBeInTheDocument();
-    expect(screen.getByText('Deploy')).toBeInTheDocument();
-    expect(screen.getByText('Support')).toBeInTheDocument();
-    expect(screen.getByText('Help & feedback')).toBeInTheDocument();
-    expect(screen.getByText('Your app will deploy to')).toBeInTheDocument();
-    expect(screen.getByText('org')).toBeInTheDocument();
-    expect(screen.getByText('and project')).toBeInTheDocument();
-    expect(screen.getByText('cog-bgfast')).toBeInTheDocument();
-    expect(screen.getByText('bgfast')).toBeInTheDocument();
-    expect(screen.getAllByText(/SPEC\.md/).length).toBeGreaterThan(0);
-    expect(screen.getByText(/apps deploy --interactive/)).toBeInTheDocument();
-  });
-
-  it('syncs internal state when the open step changes', async () => {
-    const api = makeApi();
-    render(<App deps={makeDeps()} connectToHostApp={makeConnectedFn(api)} />);
-    await waitFor(() => expect(screen.getByText('App deployment checklist')).toBeInTheDocument());
-
-    await userEvent.click(screen.getByText('Explore'));
-
-    expect(api.syncInternalState).toHaveBeenCalledWith(
-      JSON.stringify({ openStep: 'Explore' })
-    );
-  });
-
-  it('restores the open step from initial state', async () => {
-    const api = makeApi();
-    render(<App
-      deps={makeDeps()}
-      connectToHostApp={() => Promise.resolve({ api, initialState: JSON.stringify({ openStep: 'Deploy' }) })}
-    />);
-    await waitFor(() => expect(screen.getByText('App deployment checklist')).toBeInTheDocument());
-
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: /deploy/i })).toHaveAttribute('aria-expanded', 'true')
-    );
-    expect(screen.getByRole('button', { name: /plan/i })).toHaveAttribute('aria-expanded', 'false');
-  });
-});

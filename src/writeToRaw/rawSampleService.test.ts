@@ -1,16 +1,16 @@
 import type { RawDBRow } from '@cognite/sdk';
 import { describe, expect, it, vi } from 'vitest';
 
-import { CdfRawSampleService, VERIFY_ROW_LIMIT } from './rawSampleService';
+import { createRawSampleService, VERIFY_ROW_LIMIT } from './rawSampleService';
 import type { RawRowsClient } from './rawSampleService';
 import { RAW_DATABASE_NAME, RAW_TABLE_NAME, SAMPLE_ROWS } from './sampleData';
 
-describe(CdfRawSampleService.name, () => {
+describe('createRawSampleService', () => {
   describe('writeSampleRows', () => {
     it('inserts every sample row with ensureParent enabled', async () => {
       // Arrange
       const client = makeClient();
-      const service = new CdfRawSampleService(client);
+      const service = createRawSampleService(client);
 
       // Act
       await service.writeSampleRows();
@@ -25,7 +25,7 @@ describe(CdfRawSampleService.name, () => {
     });
 
     it('returns the number of rows written', async () => {
-      const service = new CdfRawSampleService(makeClient());
+      const service = createRawSampleService(makeClient());
 
       await expect(service.writeSampleRows()).resolves.toBe(SAMPLE_ROWS.length);
     });
@@ -33,7 +33,7 @@ describe(CdfRawSampleService.name, () => {
     it('rejects when CDF refuses the insert', async () => {
       const client = makeClient();
       vi.mocked(client.raw.insertRows).mockRejectedValue(new Error('403 forbidden'));
-      const service = new CdfRawSampleService(client);
+      const service = createRawSampleService(client);
 
       await expect(service.writeSampleRows()).rejects.toThrow('403 forbidden');
     });
@@ -44,7 +44,7 @@ describe(CdfRawSampleService.name, () => {
       // Arrange
       const autoPagingToArray = vi.fn(() => Promise.resolve([]));
       const client = makeClient({ autoPagingToArray });
-      const service = new CdfRawSampleService(client);
+      const service = createRawSampleService(client);
 
       // Act
       await service.readSampleRows(VERIFY_ROW_LIMIT);
@@ -60,7 +60,7 @@ describe(CdfRawSampleService.name, () => {
       const client = makeClient({
         autoPagingToArray: vi.fn(() => Promise.resolve([makeRawRow()])),
       });
-      const service = new CdfRawSampleService(client);
+      const service = createRawSampleService(client);
 
       const rows = await service.readSampleRows(VERIFY_ROW_LIMIT);
 
@@ -71,7 +71,7 @@ describe(CdfRawSampleService.name, () => {
       const client = makeClient({
         autoPagingToArray: vi.fn(() => Promise.reject(new Error('403 forbidden'))),
       });
-      const service = new CdfRawSampleService(client);
+      const service = createRawSampleService(client);
 
       await expect(service.readSampleRows(VERIFY_ROW_LIMIT)).rejects.toThrow('403 forbidden');
     });
