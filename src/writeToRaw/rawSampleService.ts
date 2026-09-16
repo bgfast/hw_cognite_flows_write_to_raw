@@ -1,5 +1,6 @@
 import type { ListRawRows, RawDBRow, RawDBRowInsert } from '@cognite/sdk';
 
+import { isNotFoundError } from './rawErrors';
 import { RAW_DATABASE_NAME, RAW_TABLE_NAME, SAMPLE_ROWS } from './sampleData';
 import type { SampleRow } from './sampleData';
 
@@ -58,10 +59,18 @@ class CdfRawSampleService implements RawSampleService {
   }
 
   async readSampleRows(limit: number): Promise<RawRowRead[]> {
-    const rows = await this.client.raw
-      .listRows(RAW_DATABASE_NAME, RAW_TABLE_NAME, { limit })
-      .autoPagingToArray({ limit });
+    try {
+      const rows = await this.client.raw
+        .listRows(RAW_DATABASE_NAME, RAW_TABLE_NAME, { limit })
+        .autoPagingToArray({ limit });
 
-    return rows.map((row) => ({ key: row.key, columns: row.columns }));
+      return rows.map((row) => ({ key: row.key, columns: row.columns }));
+    } catch (error) {
+      // Verifying before the first write is a normal thing to do, and an
+      // absent database means the table is empty rather than broken.
+      if (isNotFoundError(error)) return [];
+
+      throw error;
+    }
   }
 }

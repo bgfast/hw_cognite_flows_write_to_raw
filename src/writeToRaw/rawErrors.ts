@@ -1,4 +1,10 @@
 const FORBIDDEN = 403;
+const NOT_FOUND = 404;
+
+/** CDF answers 404 when the database or table has not been created yet. */
+export function isNotFoundError(error: unknown): boolean {
+  return statusOf(error) === NOT_FOUND;
+}
 
 export function toWriteErrorMessage(error: unknown): string {
   if (statusOf(error) === FORBIDDEN) {

@@ -63,6 +63,18 @@ describe('WriteToRawPage', () => {
     expect(host.syncInternalState).toHaveBeenCalledWith('{"resultsOpen":true}');
   });
 
+  it('stops the reading indicator when the read fails', async () => {
+    const service = makeService({
+      readSampleRows: vi.fn(() => Promise.reject(new Error('Gateway timeout'))),
+    });
+    render(<WriteToRawPage service={service} host={null} />);
+
+    await userEvent.click(screen.getByRole('button', { name: /verify in cdf raw/i }));
+
+    await waitFor(() => expect(screen.getByText(/Gateway timeout/)).toBeInTheDocument());
+    expect(screen.queryByText(/reading rows back/i)).not.toBeInTheDocument();
+  });
+
   it('explains an empty table instead of showing a bare grid', async () => {
     const service = makeService({ readSampleRows: vi.fn(() => Promise.resolve([])) });
     render(<WriteToRawPage service={service} host={null} />);

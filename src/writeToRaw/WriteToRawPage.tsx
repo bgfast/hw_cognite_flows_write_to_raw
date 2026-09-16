@@ -37,9 +37,8 @@ export function WriteToRawPage({ service, host, initialState }: WriteToRawPagePr
           <CardHeader>
             <CardTitle as="h1">Write sample rows to CDF RAW</CardTitle>
             <CardDescription>
-              One click upserts the rows below into CDF RAW, creating the database and table if
-              they do not exist yet. Every row has a fixed key, so writing twice leaves the table
-              unchanged.
+              Upserts the rows below into CDF RAW, creating the database and table if needed.
+              Writing twice changes nothing.
             </CardDescription>
           </CardHeader>
 
@@ -110,7 +109,7 @@ type VerificationPanelProps = {
 };
 
 function VerificationPanel({ columns, isReading, rows }: VerificationPanelProps) {
-  if (isReading || rows === null) {
+  if (isReading) {
     return (
       <div className="inline-flex items-center gap-3 text-muted-foreground">
         <Loader size={20} />
@@ -118,6 +117,9 @@ function VerificationPanel({ columns, isReading, rows }: VerificationPanelProps)
       </div>
     );
   }
+
+  // The read failed and the error alert above already explains why.
+  if (rows === null) return null;
 
   if (rows.length === 0) {
     return (

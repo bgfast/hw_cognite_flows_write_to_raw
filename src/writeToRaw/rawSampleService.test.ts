@@ -67,6 +67,19 @@ describe('createRawSampleService', () => {
       expect(rows).toEqual([{ key: 'pump-101', columns: { name: 'Feed pump A' } }]);
     });
 
+    it('treats a database that does not exist yet as an empty table', async () => {
+      // A first-time user verifies before writing: CDF answers 404, which means
+      // "nothing here yet", not "something went wrong".
+      const client = makeClient({
+        autoPagingToArray: vi.fn(() =>
+          Promise.reject({ status: 404, message: 'Following databases not found' })
+        ),
+      });
+      const service = createRawSampleService(client);
+
+      await expect(service.readSampleRows(VERIFY_ROW_LIMIT)).resolves.toEqual([]);
+    });
+
     it('rejects when CDF refuses the read', async () => {
       const client = makeClient({
         autoPagingToArray: vi.fn(() => Promise.reject(new Error('403 forbidden'))),
