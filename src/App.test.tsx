@@ -66,7 +66,7 @@ describe('App', () => {
     expect(screen.getByText('Your app will deploy to')).toBeInTheDocument();
     expect(screen.getByText('org')).toBeInTheDocument();
     expect(screen.getByText('and project')).toBeInTheDocument();
-    expect(screen.getByText('cog-demo')).toBeInTheDocument();
+    expect(screen.getByText('cog-bgfast')).toBeInTheDocument();
     expect(screen.getByText('bgfast')).toBeInTheDocument();
     expect(screen.getAllByText(/SPEC\.md/).length).toBeGreaterThan(0);
     expect(screen.getByText(/apps deploy --interactive/)).toBeInTheDocument();
