@@ -2,8 +2,8 @@ import type { RawDBRow } from '@cognite/sdk';
 import { describe, expect, it, vi } from 'vitest';
 
 import { CdfRawSampleService, VERIFY_ROW_LIMIT } from './rawSampleService';
-import { RAW_DATABASE_NAME, RAW_TABLE_NAME, SAMPLE_ROWS } from './sampleData';
 import type { RawRowsClient } from './rawSampleService';
+import { RAW_DATABASE_NAME, RAW_TABLE_NAME, SAMPLE_ROWS } from './sampleData';
 
 describe(CdfRawSampleService.name, () => {
   describe('writeSampleRows', () => {
