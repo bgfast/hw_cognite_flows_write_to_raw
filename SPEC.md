@@ -26,6 +26,10 @@ Source: `App-Brief.md`.
 
 - Given the verification panel was open before a reload, when the app loads again, then the panel is still open and re-reads the rows.
 
+- Given the table has not been created yet, when the user verifies before writing anything, then the app shows an empty-table message and not an error, because CDF's 404 for an absent database means "nothing here yet".
+
+- Given a verification read fails, when the failure is shown, then the reading indicator stops rather than spinning indefinitely.
+
 - Given the user lacks `rawAcl:WRITE`, when they click Write, then the app shows an error naming the missing capability and does not report success.
 
 - Given the user clicks Write twice, when the second write completes, then the table still holds five rows, because each row has a fixed key and insert is an upsert.
@@ -49,6 +53,8 @@ Source: `App-Brief.md`.
 - FR-007: After a failed write, the app MUST show a user-visible error, distinguishing a missing-capability failure (CDF 403) from other failures.
 
 - FR-008: Read-back MUST use `client.raw.listRows(...).autoPagingToArray({ limit: 25 })`. Unbounded reads and client-side filtering of a full table are prohibited.
+
+- FR-008a: A CDF 404 on read-back MUST resolve to an empty row list, so verifying before the first write shows the empty state instead of an error.
 
 - FR-009: Verification-panel visibility MUST be host-synced via `syncInternalState` / `initialState`, and MUST drive a read on load when restored as open.
 
